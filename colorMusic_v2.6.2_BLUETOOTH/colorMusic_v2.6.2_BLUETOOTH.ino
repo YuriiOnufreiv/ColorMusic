@@ -642,50 +642,46 @@ float smartIncrFloat(float value, float incr_step, float mininmum, float maximum
 }
 
 void remoteTick() {
-  char command = '-';
+  String command = "-";
   if (Serial.available())  {
-    command = Serial.read();
+    command = Serial.readString();
     bt_flag = true;
   }
   if (bt_flag) { // если данные пришли
     eeprom_timer = millis();
     eeprom_flag = true;
-    switch (command) {
-      // режимы
-      case BUTT_1: this_mode = 0;
-        break;
-      case BUTT_2: this_mode = 1;
-        break;
-      case BUTT_3: this_mode = 2;
-        break;
-      case BUTT_4: this_mode = 3;
-        break;
-      case BUTT_5: this_mode = 4;
-        break;
-      case BUTT_6: this_mode = 5;
-        break;
-      case BUTT_7: this_mode = 6;
-        break;
-      case BUTT_8: this_mode = 7;
-        break;
-      case BUTT_9: this_mode = 8;
-        break;
-      case BUTT_0: fullLowPass();
-        break;
-      case BUTT_STAR: ONstate = !ONstate; FastLED.clear(); FastLED.show(); updateEEPROM();
-        break;
-      case BUTT_HASH:
-        switch (this_mode) {
+    if (command == BUTT_1) {
+      this_mode = 0;
+    } else if (command == BUTT_2) {
+      this_mode = 1;
+    } else if (command == BUTT_3) {
+      this_mode = 2;
+    } else if (command == BUTT_4) {
+      this_mode = 3;
+    } else if (command == BUTT_5) {
+      this_mode = 4;
+    } else if (command == BUTT_6) {
+      this_mode = 5;
+    } else if (command == BUTT_7) {
+      this_mode = 6;
+    } else if (command == BUTT_8) {
+      this_mode = 7;
+    } else if (command == BUTT_9) {
+      this_mode = 8;
+    } else if (command == BUTT_0) {
+      fullLowPass();
+    } else if (command == BUTT_HASH) {
+      switch (this_mode) {
           case 4:
           case 7: if (++freq_strobe_mode > 3) freq_strobe_mode = 0;
             break;
           case 6: if (++light_mode > 2) light_mode = 0;
             break;
         }
-        break;
-      case BUTT_OK: settings_mode = !settings_mode; digitalWrite(13, settings_mode);
-        break;
-      case BUTT_UP:
+    } else if (command == BUTT_OK) {
+      settings_mode = !settings_mode; 
+      digitalWrite(13, settings_mode);
+    } else if (command == BUTT_UP) {
         if (settings_mode) {
           // ВВЕРХ общие настройки
           EMPTY_BRIGHT = smartIncr(EMPTY_BRIGHT, 5, 0, 255);
@@ -717,8 +713,7 @@ void remoteTick() {
               break;
           }
         }
-        break;
-      case BUTT_DOWN:
+    } else if (command == BUTT_DOWN) {
         if (settings_mode) {
           // ВНИЗ общие настройки
           EMPTY_BRIGHT = smartIncr(EMPTY_BRIGHT, -5, 0, 255);
@@ -750,8 +745,7 @@ void remoteTick() {
               break;
           }
         }
-        break;
-      case BUTT_LEFT:
+    } else if (command == BUTT_LEFT) {
         if (settings_mode) {
           // ВЛЕВО общие настройки
           BRIGHTNESS = smartIncr(BRIGHTNESS, -20, 0, 255);
@@ -783,8 +777,7 @@ void remoteTick() {
               break;
           }
         }
-        break;
-      case BUTT_RIGHT:
+    } else if (command == BUTT_RIGHT) {
         if (settings_mode) {
           // ВПРАВО общие настройки
           BRIGHTNESS = smartIncr(BRIGHTNESS, 20, 0, 255);
@@ -816,9 +809,8 @@ void remoteTick() {
               break;
           }
         }
-        break;
-      default: eeprom_flag = false;   // если не распознали кнопку, не обновляем настройки!
-        break;
+    } else {
+      eeprom_flag = false;   // если не распознали кнопку, не обновляем настройки!
     }
     bt_flag = false;
   }
