@@ -82,7 +82,7 @@
 
 // --------------------------- НАСТРОЙКИ ---------------------------
 #define KEEP_SETTINGS 1    // хранить ВСЕ настройки в памяти
-#define KEEP_STATE 1		   // сохранять в памяти состояние вкл/выкл (с пульта)
+#define KEEP_STATE 1       // сохранять в памяти состояние вкл/выкл (с пульта)
 #define RESET_SETTINGS 0   // сброс настроек в  памяти
 // поставить 1. Прошиться. Поставить обратно 0. Прошиться. Всё.
 
@@ -97,7 +97,7 @@ byte BRIGHTNESS = 200;      // яркость (0 - 255)
 #define BTN_PIN 3          // кнопка переключения режимов (PIN --- КНОПКА --- GND)
 #define LED_PIN 12         // пин DI светодиодной ленты
 #define POT_GND A0         // пин земля для потенциометра
-#define IR_PIN 2           // ИК приёмник
+//#define IR_PIN 2/           // ИК приёмник
 
 // настройки радуги
 float RAINBOW_STEP = 5.5;   // шаг изменения цвета радуги
@@ -168,25 +168,23 @@ byte HUE_STEP = 5;
 */
 // --------------------------- НАСТРОЙКИ ---------------------------
 
-// ----- КНОПКИ ПУЛЬТА -----
-#define BUTT_UP     0xF39EEBAD
-#define BUTT_DOWN   0xC089F6AD
-#define BUTT_LEFT   0xE25410AD
-#define BUTT_RIGHT  0x14CE54AD
-#define BUTT_OK     0x297C76AD
-#define BUTT_1      0x4E5BA3AD
-#define BUTT_2      0xE51CA6AD
-#define BUTT_3      0xE207E1AD
-#define BUTT_4      0x517068AD
-#define BUTT_5      0x1B92DDAD
-#define BUTT_6      0xAC2A56AD
-#define BUTT_7      0x5484B6AD
-#define BUTT_8      0xD22353AD
-#define BUTT_9      0xDF3F4BAD
-#define BUTT_0      0xF08A26AD
-#define BUTT_STAR   0x68E456AD
-#define BUTT_HASH   0x151CD6AD
-// ----- КНОПКИ ПУЛЬТА -----
+const char BUTT_UP = 'u';
+const char BUTT_DOWN = 'd';
+const char BUTT_LEFT = 'l';
+const char BUTT_RIGHT = 'r';
+const char BUTT_OK = 'o';
+const char BUTT_1 = '1';
+const char BUTT_2 = '2';
+const char BUTT_3 = '3';
+const char BUTT_4 = '4';
+const char BUTT_5 = '5';
+const char BUTT_6 = '6';
+const char BUTT_7 = '7';
+const char BUTT_8 = '8';
+const char BUTT_9 = '9';
+const char BUTT_0 = '0';
+const char BUTT_STAR = '*';
+const char BUTT_HASH = '#';
 
 // ------------------------------ ДЛЯ РАЗРАБОТЧИКОВ --------------------------------
 #define MODE_AMOUNT 9      // количество режимов
@@ -206,10 +204,6 @@ CRGB leds[NUM_LEDS];
 
 #include "GyverButton.h"
 GButton butt1(BTN_PIN);
-
-#include "IRLremote.h"
-CHashIR IRLremote;
-uint32_t IRdata;
 
 // градиент-палитра от зелёного к красному
 DEFINE_GRADIENT_PALETTE(soundlevel_gp) {
@@ -242,7 +236,7 @@ boolean colorMusicFlash[3], strobeUp_flag, strobeDwn_flag;
 byte this_mode = MODE;
 int thisBright[3], strobe_bright = 0;
 unsigned int light_time = STROBE_PERIOD * STROBE_DUTY / 100;
-volatile boolean ir_flag;
+volatile boolean bt_flag;
 boolean settings_mode, ONstate = true;
 int8_t freq_strobe_mode, light_mode;
 int freq_max;
@@ -266,8 +260,6 @@ void setup() {
   pinMode(POT_GND, OUTPUT);
   digitalWrite(POT_GND, LOW);
   butt1.setTimeout(900);
-
-  IRLremote.begin(IR_PIN);
 
   // для увеличения точности уменьшаем опорное напряжение,
   // выставив EXTERNAL и подключив Aref к выходу 3.3V на плате через делитель
@@ -452,7 +444,7 @@ void mainLoop() {
       }
       if (this_mode == 6) animation();
 
-      if (!IRLremote.receiving())    // если на ИК приёмник не приходит сигнал (без этого НЕ РАБОТАЕТ!)
+      if (!Serial.available())    // если на ИК приёмник не приходит сигнал (без этого НЕ РАБОТАЕТ!)
         FastLED.show();         // отправить значения на ленту
 
       if (this_mode != 7)       // 7 режиму не нужна очистка!!!
@@ -650,15 +642,15 @@ float smartIncrFloat(float value, float incr_step, float mininmum, float maximum
 }
 
 void remoteTick() {
-  if (IRLremote.available())  {
-    auto data = IRLremote.read();
-    IRdata = data.command;
-    ir_flag = true;
+  char command = '-';
+  if (Serial.available())  {
+    command = Serial.read();
+    bt_flag = true;
   }
-  if (ir_flag) { // если данные пришли
+  if (bt_flag) { // если данные пришли
     eeprom_timer = millis();
     eeprom_flag = true;
-    switch (IRdata) {
+    switch (command) {
       // режимы
       case BUTT_1: this_mode = 0;
         break;
@@ -828,7 +820,7 @@ void remoteTick() {
       default: eeprom_flag = false;   // если не распознали кнопку, не обновляем настройки!
         break;
     }
-    ir_flag = false;
+    bt_flag = false;
   }
 }
 
