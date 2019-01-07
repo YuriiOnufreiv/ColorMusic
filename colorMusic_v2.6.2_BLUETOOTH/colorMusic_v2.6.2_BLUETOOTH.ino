@@ -94,7 +94,6 @@ byte BRIGHTNESS = 200;      // яркость (0 - 255)
 #define SOUND_R A2         // аналоговый пин вход аудио, правый канал
 #define SOUND_L A1         // аналоговый пин вход аудио, левый канал
 #define SOUND_R_FREQ A3    // аналоговый пин вход аудио для режима с частотами (через кондер)
-#define BTN_PIN 3          // кнопка переключения режимов (PIN --- КНОПКА --- GND)
 #define LED_PIN 12         // пин DI светодиодной ленты
 #define POT_GND A0         // пин земля для потенциометра
 
@@ -201,9 +200,6 @@ float freq_to_stripe = NUM_LEDS / 40; // /2 так как симметрия, и
 #include "FastLED.h"
 CRGB leds[NUM_LEDS];
 
-#include "GyverButton.h"
-GButton butt1(BTN_PIN);
-
 // градиент-палитра от зелёного к красному
 DEFINE_GRADIENT_PALETTE(soundlevel_gp) {
   0,    0,    255,  0,  // green
@@ -258,7 +254,6 @@ void setup() {
 
   pinMode(POT_GND, OUTPUT);
   digitalWrite(POT_GND, LOW);
-  butt1.setTimeout(900);
 
   // для увеличения точности уменьшаем опорное напряжение,
   // выставив EXTERNAL и подключив Aref к выходу 3.3V на плате через делитель
@@ -296,8 +291,8 @@ void setup() {
 }
 
 void loop() {
-  buttonTick();     // опрос и обработка кнопки
-  remoteTick();     // опрос ИК пульта
+  //  buttonTick();     // опрос и обработка кнопки
+  processCommand();     // опрос ИК пульта
   mainLoop();       // главный цикл обработки и отрисовки
   eepromTick();     // проверка не пора ли сохранить настройки
 }
@@ -640,8 +635,8 @@ float smartIncrFloat(float value, float incr_step, float mininmum, float maximum
   return val_buf;
 }
 
-void remoteTick() {
-  char command = '-';
+void processCommand() {
+  char command = '.';
   if (Serial.available())  {
     command = Serial.read();
     bt_flag = true;
@@ -866,15 +861,6 @@ void analyzeAudio() {
   fht_mag_log(); // take the output of the fht
 }
 
-void buttonTick() {
-  butt1.tick();  // обязательная функция отработки. Должна постоянно опрашиваться
-  if (butt1.isSingle())                              // если единичное нажатие
-    if (++this_mode >= MODE_AMOUNT) this_mode = 0;   // изменить режим
-
-  if (butt1.isHolded()) {     // кнопка удержана
-    fullLowPass();
-  }
-}
 void fullLowPass() {
   digitalWrite(13, HIGH);   // включить светодиод 13 пин
   FastLED.setBrightness(0); // погасить ленту
