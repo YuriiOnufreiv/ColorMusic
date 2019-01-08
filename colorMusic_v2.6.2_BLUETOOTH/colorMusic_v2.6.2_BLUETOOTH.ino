@@ -928,3 +928,45 @@ void eepromTick() {
       updateEEPROM();
     }
 }
+
+void setAll(byte red, byte green, byte blue) {
+  for (int i = 0; i < NUM_LEDS; i++ ) {
+    setPixel(i, red, green, blue);
+  }
+  showStrip();
+}
+
+void showStrip() {
+  FastLED.show();
+}
+
+void setPixel(int Pixel, byte red, byte green, byte blue) {
+  leds[Pixel].r = red;
+  leds[Pixel].g = green;
+  leds[Pixel].b = blue;
+}
+
+void meteorRain(byte red, byte green, byte blue, byte meteorSize,
+                byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
+  setAll(0, 0, 0);
+  for (int i = 0; i < NUM_LEDS + NUM_LEDS; i++) {
+    // fade brightness all LEDs one step
+    for (int j = 0; j < NUM_LEDS; j++) {
+      if ( (!meteorRandomDecay) || (random(10) > 5) ) {
+        fadeToBlack(j, meteorTrailDecay );
+      }
+    }
+    // draw meteor
+    for (int j = 0; j < meteorSize; j++) {
+      if ( ( i - j < NUM_LEDS) && (i - j >= 0) ) {
+        setPixel(i - j, red, green, blue);
+      }
+    }
+    showStrip();
+    delay(SpeedDelay);
+  }
+}
+
+void fadeToBlack(int ledNo, byte fadeValue) {
+  leds[ledNo].fadeToBlackBy(fadeValue);
+}
