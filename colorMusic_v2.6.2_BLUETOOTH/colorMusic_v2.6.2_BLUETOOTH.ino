@@ -165,28 +165,33 @@ byte HUE_STEP = 5;
   HUE_PINK
 */
 // --------------------------- НАСТРОЙКИ ---------------------------
+const char VU_METER_MODE = 'a';
+const char RAINBOW_MODE = 'b';
+const char STRIPS_FIVE_MODE = 'c';
+const char STRIPS_THREE_MODE = 'd';
+const char STRIPS_ONE_ALL_MODE = 'e';
+const char STRIPS_ONE_LOW_MODE = 'f';
+const char STRIPS_ONE_MEDIUM_MODE = 'g';
+const char STRIPS_ONE_HIGH_MODE = 'h';
+const char SPECTRUM_MODE = 'i';
+const char BACKLIGHT_PERMANENT_MODE = 'j';
+const char BACKLIGHT_CHANGING_MODE = 'k';
+const char BACKLIGHT_RAINBOW_MODE = 'l';
+const char FREQUENCIES_ALL_MODE = 'm';
+const char FREQUENCIES_LOW_MODE = 'n';
+const char FREQUENCIES_MEDIUM_MODE = 'o';
+const char FREQUENCIES_HIGH_MODE = 'p';
+const char STROBOSCOPE_MODE = 'q';
 
-const char BUTT_UP = 'u';
-const char BUTT_DOWN = 'd';
-const char BUTT_LEFT = 'l';
-const char BUTT_RIGHT = 'r';
-const char BUTT_OK = 'o';
-const char BUTT_1 = '1';
-const char BUTT_2 = '2';
-const char BUTT_3 = '3';
-const char BUTT_4 = '4';
-const char BUTT_5 = '5';
-const char BUTT_6 = '6';
-const char BUTT_7 = '7';
-const char BUTT_8 = '8';
-const char BUTT_9 = '9';
-const char BUTT_0 = '0';
-const char BUTT_STAR = '*';
-const char BUTT_HASH = '#';
+const char SETTINGS_A_DEC = '-';
+const char SETTINGS_A_INC = '+';
+const char SETTINGS_B_DEC = '<';
+const char SETTINGS_B_INC = '>';
+const char POWER = '*';
+const char NOISE_CALIBRATION = '#';
+const char COMMON_BRIGHTNESS_SETTINGS = '@';
 
 // ------------------------------ ДЛЯ РАЗРАБОТЧИКОВ --------------------------------
-#define MODE_AMOUNT 9      // количество режимов
-
 #define STRIPE NUM_LEDS / 5
 float freq_to_stripe = NUM_LEDS / 40; // /2 так как симметрия, и /20 так как 20 частот
 
@@ -233,7 +238,6 @@ int thisBright[3], strobe_bright = 0;
 unsigned int light_time = STROBE_PERIOD * STROBE_DUTY / 100;
 volatile boolean bt_flag;
 boolean settings_mode, ONstate = true;
-int8_t freq_strobe_mode, light_mode;
 int freq_max;
 float freq_max_f, rainbow_steps;
 int freq_f[32];
@@ -362,7 +366,9 @@ void mainLoop() {
       }
 
       // 3-5 режим - цветомузыка
-      if (this_mode == 2 || this_mode == 3 || this_mode == 4 || this_mode == 7 || this_mode == 8) {
+      if (this_mode == 2 || this_mode == 3 || this_mode == 4 || this_mode == 5
+          || this_mode == 6 || this_mode == 7 || this_mode == 8
+          || this_mode == 12 || this_mode == 13 || this_mode == 14 || this_mode == 15) {
         analyzeAudio();
         colorMusic[0] = 0;
         colorMusic[1] = 0;
@@ -408,7 +414,7 @@ void mainLoop() {
         }
         animation();
       }
-      if (this_mode == 5) {
+      if (this_mode == 16) {
         if ((long)millis() - strobe_timer > STROBE_PERIOD) {
           strobe_timer = millis();
           strobeUp_flag = true;
@@ -436,12 +442,12 @@ void mainLoop() {
         }
         animation();
       }
-      if (this_mode == 6) animation();
+      if (this_mode == 9 || this_mode == 10 || this_mode == 11) animation();
 
       if (!Serial.available())    // если на ИК приёмник не приходит сигнал (без этого НЕ РАБОТАЕТ!)
         FastLED.show();         // отправить значения на ленту
 
-      if (this_mode != 7)       // 7 режиму не нужна очистка!!!
+      if (this_mode != 12 || this_mode != 13 || this_mode != 14 || this_mode != 15)       // 7 режиму не нужна очистка!!!
         FastLED.clear();          // очистить массив пикселей
       main_timer = millis();    // сбросить таймер
     }
@@ -510,81 +516,77 @@ void animation() {
       }
       break;
     case 4:
-      switch (freq_strobe_mode) {
-        case 0:
-          if (colorMusicFlash[2]) HIGHS();
-          else if (colorMusicFlash[1]) MIDS();
-          else if (colorMusicFlash[0]) LOWS();
-          else SILENCE();
-          break;
-        case 1:
-          if (colorMusicFlash[2]) HIGHS();
-          else SILENCE();
-          break;
-        case 2:
-          if (colorMusicFlash[1]) MIDS();
-          else SILENCE();
-          break;
-        case 3:
-          if (colorMusicFlash[0]) LOWS();
-          else SILENCE();
-          break;
-      }
+      if (colorMusicFlash[2]) HIGHS();
+      else if (colorMusicFlash[1]) MIDS();
+      else if (colorMusicFlash[0]) LOWS();
+      else SILENCE();
       break;
     case 5:
-      if (strobe_bright > 0)
-        for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(STROBE_COLOR, STROBE_SAT, strobe_bright);
-      else
-        for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      if (colorMusicFlash[0]) LOWS();
+      else SILENCE();
       break;
     case 6:
-      switch (light_mode) {
-        case 0: for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(LIGHT_COLOR, LIGHT_SAT, 255);
-          break;
-        case 1:
-          if (millis() - color_timer > COLOR_SPEED) {
-            color_timer = millis();
-            if (++this_color > 255) this_color = 0;
-          }
-          for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(this_color, LIGHT_SAT, 255);
-          break;
-        case 2:
-          if (millis() - rainbow_timer > 30) {
-            rainbow_timer = millis();
-            this_color += RAINBOW_PERIOD;
-            if (this_color > 255) this_color = 0;
-            if (this_color < 0) this_color = 255;
-          }
-          rainbow_steps = this_color;
-          for (int i = 0; i < NUM_LEDS; i++) {
-            leds[i] = CHSV((int)floor(rainbow_steps), 255, 255);
-            rainbow_steps += RAINBOW_STEP_2;
-            if (rainbow_steps > 255) rainbow_steps = 0;
-            if (rainbow_steps < 0) rainbow_steps = 255;
-          }
-          break;
-      }
+      if (colorMusicFlash[1]) MIDS();
+      else SILENCE();
       break;
     case 7:
-      switch (freq_strobe_mode) {
-        case 0:
-          if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
-          else if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
-          else if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
-          else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-          break;
-        case 1:
-          if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
-          else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-          break;
-        case 2:
-          if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
-          else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-          break;
-        case 3:
-          if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
-          else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-          break;
+      if (colorMusicFlash[2]) HIGHS();
+      else SILENCE();
+      break;
+    case 8: {
+        byte HUEindex = HUE_START;
+        for (byte i = 0; i < NUM_LEDS / 2; i++) {
+          byte this_bright = map(freq_f[(int)floor((NUM_LEDS / 2 - i) / freq_to_stripe)], 0, freq_max_f, 0, 255);
+          this_bright = constrain(this_bright, 0, 255);
+          leds[i] = CHSV(HUEindex, 255, this_bright);
+          leds[NUM_LEDS - i - 1] = leds[i];
+          HUEindex += HUE_STEP;
+          if (HUEindex > 255) HUEindex = 0;
+        }
+        break;
+      }
+    case 9: for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(LIGHT_COLOR, LIGHT_SAT, 255);
+      break;
+    case 10:
+      if (millis() - color_timer > COLOR_SPEED) {
+        color_timer = millis();
+        if (++this_color > 255) this_color = 0;
+      }
+      for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(this_color, LIGHT_SAT, 255);
+      break;
+    case 11:
+      if (millis() - rainbow_timer > 30) {
+        rainbow_timer = millis();
+        this_color += RAINBOW_PERIOD;
+        if (this_color > 255) this_color = 0;
+        if (this_color < 0) this_color = 255;
+      }
+      rainbow_steps = this_color;
+      for (int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CHSV((int)floor(rainbow_steps), 255, 255);
+        rainbow_steps += RAINBOW_STEP_2;
+        if (rainbow_steps > 255) rainbow_steps = 0;
+        if (rainbow_steps < 0) rainbow_steps = 255;
+      }
+      break;
+    case 12:
+    case 13:
+    case 14:
+    case 15:
+      if (this_mode == 12) {
+        if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
+        else if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
+        else if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
+        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      } else if (this_mode == 15) {
+        if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
+        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      } else if (this_mode == 14) {
+        if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
+        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      } else if (this_mode == 13) {
+        if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
+        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
       }
       leds[(NUM_LEDS / 2) - 1] = leds[NUM_LEDS / 2];
       if (millis() - running_timer > RUNNING_SPEED) {
@@ -595,16 +597,11 @@ void animation() {
         }
       }
       break;
-    case 8:
-      byte HUEindex = HUE_START;
-      for (byte i = 0; i < NUM_LEDS / 2; i++) {
-        byte this_bright = map(freq_f[(int)floor((NUM_LEDS / 2 - i) / freq_to_stripe)], 0, freq_max_f, 0, 255);
-        this_bright = constrain(this_bright, 0, 255);
-        leds[i] = CHSV(HUEindex, 255, this_bright);
-        leds[NUM_LEDS - i - 1] = leds[i];
-        HUEindex += HUE_STEP;
-        if (HUEindex > 255) HUEindex = 0;
-      }
+    case 16:
+      if (strobe_bright > 0)
+        for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(STROBE_COLOR, STROBE_SAT, strobe_bright);
+      else
+        for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
       break;
   }
 }
@@ -646,40 +643,47 @@ void processCommand() {
     eeprom_flag = true;
     switch (command) {
       // режимы
-      case BUTT_1: this_mode = 0;
+      case VU_METER_MODE: this_mode = 0;
         break;
-      case BUTT_2: this_mode = 1;
+      case RAINBOW_MODE: this_mode = 1;
         break;
-      case BUTT_3: this_mode = 2;
+      case STRIPS_FIVE_MODE: this_mode = 2;
         break;
-      case BUTT_4: this_mode = 3;
+      case STRIPS_THREE_MODE: this_mode = 3;
         break;
-      case BUTT_5: this_mode = 4;
+      case STRIPS_ONE_ALL_MODE: this_mode = 4;
         break;
-      case BUTT_6: this_mode = 5;
+      case STRIPS_ONE_LOW_MODE: this_mode = 5;
         break;
-      case BUTT_7: this_mode = 6;
+      case STRIPS_ONE_MEDIUM_MODE: this_mode = 6;
         break;
-      case BUTT_8: this_mode = 7;
+      case STRIPS_ONE_HIGH_MODE: this_mode = 7;
         break;
-      case BUTT_9: this_mode = 8;
+      case SPECTRUM_MODE: this_mode = 8;
         break;
-      case BUTT_0: fullLowPass();
+      case BACKLIGHT_PERMANENT_MODE: this_mode = 9;
         break;
-      case BUTT_STAR: ONstate = !ONstate; FastLED.clear(); FastLED.show(); updateEEPROM();
+      case BACKLIGHT_CHANGING_MODE: this_mode = 10;
         break;
-      case BUTT_HASH:
-        switch (this_mode) {
-          case 4:
-          case 7: if (++freq_strobe_mode > 3) freq_strobe_mode = 0;
-            break;
-          case 6: if (++light_mode > 2) light_mode = 0;
-            break;
-        }
+      case BACKLIGHT_RAINBOW_MODE: this_mode = 11;
         break;
-      case BUTT_OK: settings_mode = !settings_mode; digitalWrite(13, settings_mode);
+      case FREQUENCIES_ALL_MODE: this_mode = 12;
         break;
-      case BUTT_UP:
+      case FREQUENCIES_LOW_MODE: this_mode = 13;
+        break;
+      case FREQUENCIES_MEDIUM_MODE: this_mode = 14;
+        break;
+      case FREQUENCIES_HIGH_MODE: this_mode = 15;
+        break;
+      case STROBOSCOPE_MODE: this_mode = 16;
+        break;
+      case NOISE_CALIBRATION: fullLowPass();
+        break;
+      case POWER: ONstate = !ONstate; FastLED.clear(); FastLED.show(); updateEEPROM();
+        break;
+      case COMMON_BRIGHTNESS_SETTINGS: settings_mode = !settings_mode; digitalWrite(13, settings_mode);
+        break;
+      case SETTINGS_B_INC:
         if (settings_mode) {
           // ВВЕРХ общие настройки
           EMPTY_BRIGHT = smartIncr(EMPTY_BRIGHT, 5, 0, 255);
@@ -691,28 +695,29 @@ void processCommand() {
               break;
             case 2:
             case 3:
-            case 4: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, 0.1, 0, 5);
-              break;
-            case 5: STROBE_PERIOD = smartIncr(STROBE_PERIOD, 20, 1, 1000);
-              break;
+            case 4:
+            case 5:
             case 6:
-              switch (light_mode) {
-                case 0: LIGHT_SAT = smartIncr(LIGHT_SAT, 20, 0, 255);
-                  break;
-                case 1: LIGHT_SAT = smartIncr(LIGHT_SAT, 20, 0, 255);
-                  break;
-                case 2: RAINBOW_STEP_2 = smartIncrFloat(RAINBOW_STEP_2, 0.5, 0.5, 10);
-                  break;
-              }
-              break;
-            case 7: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, 0.1, 0.0, 10);
+            case 7: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, 0.1, 0, 5);
               break;
             case 8: HUE_START = smartIncr(HUE_START, 10, 0, 255);
+              break;
+            case 9:
+            case 10: LIGHT_SAT = smartIncr(LIGHT_SAT, 20, 0, 255);
+              break;
+            case 11: RAINBOW_STEP_2 = smartIncrFloat(RAINBOW_STEP_2, 0.5, 0.5, 10);
+              break;
+            case 12:
+            case 13:
+            case 14:
+            case 15: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, 0.1, 0.0, 10);
+              break;
+            case 16: STROBE_PERIOD = smartIncr(STROBE_PERIOD, 20, 1, 1000);
               break;
           }
         }
         break;
-      case BUTT_DOWN:
+      case SETTINGS_B_DEC:
         if (settings_mode) {
           // ВНИЗ общие настройки
           EMPTY_BRIGHT = smartIncr(EMPTY_BRIGHT, -5, 0, 255);
@@ -724,28 +729,29 @@ void processCommand() {
               break;
             case 2:
             case 3:
-            case 4: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, -0.1, 0, 5);
-              break;
-            case 5: STROBE_PERIOD = smartIncr(STROBE_PERIOD, -20, 1, 1000);
-              break;
+            case 4:
+            case 5:
             case 6:
-              switch (light_mode) {
-                case 0: LIGHT_SAT = smartIncr(LIGHT_SAT, -20, 0, 255);
-                  break;
-                case 1: LIGHT_SAT = smartIncr(LIGHT_SAT, -20, 0, 255);
-                  break;
-                case 2: RAINBOW_STEP_2 = smartIncrFloat(RAINBOW_STEP_2, -0.5, 0.5, 10);
-                  break;
-              }
-              break;
-            case 7: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, -0.1, 0.0, 10);
+            case 7: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, -0.1, 0, 5);
               break;
             case 8: HUE_START = smartIncr(HUE_START, -10, 0, 255);
+              break;
+            case 9:
+            case 10: LIGHT_SAT = smartIncr(LIGHT_SAT, -20, 0, 255);
+              break;
+            case 11: RAINBOW_STEP_2 = smartIncrFloat(RAINBOW_STEP_2, -0.5, 0.5, 10);
+              break;
+            case 12:
+            case 13:
+            case 14:
+            case 15: MAX_COEF_FREQ = smartIncrFloat(MAX_COEF_FREQ, -0.1, 0.0, 10);
+              break;
+            case 16: STROBE_PERIOD = smartIncr(STROBE_PERIOD, -20, 1, 1000);
               break;
           }
         }
         break;
-      case BUTT_LEFT:
+      case SETTINGS_A_DEC:
         if (settings_mode) {
           // ВЛЕВО общие настройки
           BRIGHTNESS = smartIncr(BRIGHTNESS, -20, 0, 255);
@@ -757,28 +763,30 @@ void processCommand() {
               break;
             case 2:
             case 3:
-            case 4: SMOOTH_FREQ = smartIncrFloat(SMOOTH_FREQ, -0.05, 0.05, 1);
-              break;
-            case 5: STROBE_SMOOTH = smartIncr(STROBE_SMOOTH, -20, 0, 255);
-              break;
+            case 4:
+            case 5:
             case 6:
-              switch (light_mode) {
-                case 0: LIGHT_COLOR = smartIncr(LIGHT_COLOR, -10, 0, 255);
-                  break;
-                case 1: COLOR_SPEED = smartIncr(COLOR_SPEED, -10, 0, 255);
-                  break;
-                case 2: RAINBOW_PERIOD = smartIncr(RAINBOW_PERIOD, -1, -20, 20);
-                  break;
-              }
-              break;
-            case 7: RUNNING_SPEED = smartIncr(RUNNING_SPEED, -10, 1, 255);
+            case 7: SMOOTH_FREQ = smartIncrFloat(SMOOTH_FREQ, -0.05, 0.05, 1);
               break;
             case 8: HUE_STEP = smartIncr(HUE_STEP, -1, 1, 255);
+              break;
+            case 9: LIGHT_COLOR = smartIncr(LIGHT_COLOR, -10, 0, 255);
+              break;
+            case 10: COLOR_SPEED = smartIncr(COLOR_SPEED, -10, 0, 255);
+              break;
+            case 11: RAINBOW_PERIOD = smartIncr(RAINBOW_PERIOD, -1, -20, 20);
+              break;
+            case 12:
+            case 13:
+            case 14:
+            case 15: RUNNING_SPEED = smartIncr(RUNNING_SPEED, -10, 1, 255);
+              break;
+            case 16: STROBE_SMOOTH = smartIncr(STROBE_SMOOTH, -20, 0, 255);
               break;
           }
         }
         break;
-      case BUTT_RIGHT:
+      case SETTINGS_A_INC:
         if (settings_mode) {
           // ВПРАВО общие настройки
           BRIGHTNESS = smartIncr(BRIGHTNESS, 20, 0, 255);
@@ -790,23 +798,25 @@ void processCommand() {
               break;
             case 2:
             case 3:
-            case 4: SMOOTH_FREQ = smartIncrFloat(SMOOTH_FREQ, 0.05, 0.05, 1);
-              break;
-            case 5: STROBE_SMOOTH = smartIncr(STROBE_SMOOTH, 20, 0, 255);
-              break;
+            case 4:
+            case 5:
             case 6:
-              switch (light_mode) {
-                case 0: LIGHT_COLOR = smartIncr(LIGHT_COLOR, 10, 0, 255);
-                  break;
-                case 1: COLOR_SPEED = smartIncr(COLOR_SPEED, 10, 0, 255);
-                  break;
-                case 2: RAINBOW_PERIOD = smartIncr(RAINBOW_PERIOD, 1, -20, 20);
-                  break;
-              }
-              break;
-            case 7: RUNNING_SPEED = smartIncr(RUNNING_SPEED, 10, 1, 255);
+            case 7: SMOOTH_FREQ = smartIncrFloat(SMOOTH_FREQ, 0.05, 0.05, 1);
               break;
             case 8: HUE_STEP = smartIncr(HUE_STEP, 1, 1, 255);
+              break;
+            case 9: LIGHT_COLOR = smartIncr(LIGHT_COLOR, 10, 0, 255);
+              break;
+            case 10: COLOR_SPEED = smartIncr(COLOR_SPEED, 10, 0, 255);
+              break;
+            case 11: RAINBOW_PERIOD = smartIncr(RAINBOW_PERIOD, 1, -20, 20);
+              break;
+            case 12:
+            case 13:
+            case 14:
+            case 15: RUNNING_SPEED = smartIncr(RUNNING_SPEED, 10, 1, 255);
+              break;
+            case 16: STROBE_SMOOTH = smartIncr(STROBE_SMOOTH, 20, 0, 255);
               break;
           }
         }
@@ -874,8 +884,6 @@ void fullLowPass() {
 }
 void updateEEPROM() {
   EEPROM.updateByte(1, this_mode);
-  EEPROM.updateByte(2, freq_strobe_mode);
-  EEPROM.updateByte(3, light_mode);
   EEPROM.updateInt(4, RAINBOW_STEP);
   EEPROM.updateFloat(8, MAX_COEF_FREQ);
   EEPROM.updateInt(12, STROBE_PERIOD);
@@ -895,8 +903,6 @@ void updateEEPROM() {
 }
 void readEEPROM() {
   this_mode = EEPROM.readByte(1);
-  freq_strobe_mode = EEPROM.readByte(2);
-  light_mode = EEPROM.readByte(3);
   RAINBOW_STEP = EEPROM.readInt(4);
   MAX_COEF_FREQ = EEPROM.readFloat(8);
   STROBE_PERIOD = EEPROM.readInt(12);
