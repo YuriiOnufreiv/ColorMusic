@@ -970,3 +970,16 @@ void meteorRain(byte red, byte green, byte blue, byte meteorSize,
 void fadeToBlack(int ledNo, byte fadeValue) {
   leds[ledNo].fadeToBlackBy(fadeValue);
 }
+
+void colorWipe() {
+  colorWipe(0x00, 0xff, 0x00, 50);
+  colorWipe(0x00, 0x00, 0x00, 50);
+}
+
+void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
+  for (uint16_t i = 0; i < NUM_LEDS; i++) {
+    setPixel(i, red, green, blue);
+    showStrip();
+    delay(SpeedDelay);
+  }
+}
