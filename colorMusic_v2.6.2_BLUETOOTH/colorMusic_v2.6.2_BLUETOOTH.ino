@@ -102,6 +102,7 @@ float RAINBOW_STEP = 5.5;   // шаг изменения цвета радуги
 
 // отрисовка
 #define MODE 0              // режим при запуске
+#define START_UP_EFFECT 0   // start up mode
 #define MAIN_LOOP 5         // период основного цикла отрисовки (по умолчанию 5)
 
 // сигнал
@@ -292,6 +293,8 @@ void setup() {
       readEEPROM();
     }
   }
+
+  showStartUpEffect();
 }
 
 void loop() {
@@ -929,6 +932,20 @@ void eepromTick() {
     }
 }
 
+void showStartUpEffect() {
+  switch (START_UP_EFFECT) {
+    case 0:
+      meteorRain();
+      break;
+    case 1:
+      colorWipe();
+      break;
+    case 2:
+      cylonBounce();
+      break;
+  }
+}
+
 void setAll(byte red, byte green, byte blue) {
   for (int i = 0; i < NUM_LEDS; i++ ) {
     setPixel(i, red, green, blue);
@@ -944,6 +961,10 @@ void setPixel(int Pixel, byte red, byte green, byte blue) {
   leds[Pixel].r = red;
   leds[Pixel].g = green;
   leds[Pixel].b = blue;
+}
+
+void meteorRain() {
+  meteorRain(0xff, 0xff, 0xff, 10, 64, true, 30);
 }
 
 void meteorRain(byte red, byte green, byte blue, byte meteorSize,
