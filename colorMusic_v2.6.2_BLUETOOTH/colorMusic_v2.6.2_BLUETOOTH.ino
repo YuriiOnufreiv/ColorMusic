@@ -574,22 +574,22 @@ void animation() {
       else if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
       else if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
       else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      helperMethod();
+      frequenciesModeAnimation();
       break;
     case 13:
       if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
       else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      helperMethod();
+      frequenciesModeAnimation();
       break;
     case 14:
       if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
       else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      helperMethod();
+      frequenciesModeAnimation();
       break;
     case 15:
       if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
       else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      helperMethod();
+      frequenciesModeAnimation();
       break;
     case 16:
       if (strobe_bright > 0)
@@ -600,7 +600,7 @@ void animation() {
   }
 }
 
-void helperMethod() {
+void frequenciesModeAnimation() {
   leds[(NUM_LEDS / 2) - 1] = leds[NUM_LEDS / 2];
   if (millis() - running_timer > RUNNING_SPEED) {
     running_timer = millis();
