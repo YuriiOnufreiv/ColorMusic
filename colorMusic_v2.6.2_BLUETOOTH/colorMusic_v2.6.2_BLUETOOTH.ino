@@ -570,32 +570,26 @@ void animation() {
       }
       break;
     case 12:
+      if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
+      else if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
+      else if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
+      else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      helperMethod();
+      break;
     case 13:
+      if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
+      else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      helperMethod();
+      break;
     case 14:
+      if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
+      else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      helperMethod();
+      break;
     case 15:
-      if (this_mode == 12) {
-        if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
-        else if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
-        else if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
-        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      } else if (this_mode == 15) {
-        if (running_flag[2]) leds[NUM_LEDS / 2] = CHSV(HIGH_COLOR, 255, thisBright[2]);
-        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      } else if (this_mode == 14) {
-        if (running_flag[1]) leds[NUM_LEDS / 2] = CHSV(MID_COLOR, 255, thisBright[1]);
-        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      } else if (this_mode == 13) {
-        if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
-        else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
-      }
-      leds[(NUM_LEDS / 2) - 1] = leds[NUM_LEDS / 2];
-      if (millis() - running_timer > RUNNING_SPEED) {
-        running_timer = millis();
-        for (byte i = 0; i < NUM_LEDS / 2 - 1; i++) {
-          leds[i] = leds[i + 1];
-          leds[NUM_LEDS - i - 1] = leds[i];
-        }
-      }
+      if (running_flag[0]) leds[NUM_LEDS / 2] = CHSV(LOW_COLOR, 255, thisBright[0]);
+      else leds[NUM_LEDS / 2] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
+      helperMethod();
       break;
     case 16:
       if (strobe_bright > 0)
@@ -603,6 +597,17 @@ void animation() {
       else
         for (int i = 0; i < NUM_LEDS; i++) leds[i] = CHSV(EMPTY_COLOR, 255, EMPTY_BRIGHT);
       break;
+  }
+}
+
+void helperMethod() {
+  leds[(NUM_LEDS / 2) - 1] = leds[NUM_LEDS / 2];
+  if (millis() - running_timer > RUNNING_SPEED) {
+    running_timer = millis();
+    for (byte i = 0; i < NUM_LEDS / 2 - 1; i++) {
+      leds[i] = leds[i + 1];
+      leds[NUM_LEDS - i - 1] = leds[i];
+    }
   }
 }
 
