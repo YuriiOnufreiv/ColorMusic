@@ -447,7 +447,7 @@ void mainLoop() {
       if (!Serial.available())    // если на ИК приёмник не приходит сигнал (без этого НЕ РАБОТАЕТ!)
         FastLED.show();         // отправить значения на ленту
 
-      if (this_mode != 12 || this_mode != 13 || this_mode != 14 || this_mode != 15)       // 7 режиму не нужна очистка!!!
+      if (this_mode != 12 && this_mode != 13 && this_mode != 14 && this_mode != 15)       // 7 режиму не нужна очистка!!!
         FastLED.clear();          // очистить массив пикселей
       main_timer = millis();    // сбросить таймер
     }
