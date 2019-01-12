@@ -89,12 +89,15 @@
 // лента
 #define NUM_LEDS 120        // количество светодиодов
 byte BRIGHTNESS = 200;      // яркость (0 - 255)
+#define CURRENT_LIMIT 3000  // лимит по току в МИЛЛИАМПЕРАХ, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 // пины
 #define SOUND_R A2         // аналоговый пин вход аудио, правый канал
 #define SOUND_L A1         // аналоговый пин вход аудио, левый канал
 #define SOUND_R_FREQ A3    // аналоговый пин вход аудио для режима с частотами (через кондер)
 #define LED_PIN 12         // пин DI светодиодной ленты
+#define MLED_PIN 13        // пин светодиода режимов
+#define MLED_ON HIGH
 #define POT_GND A0         // пин земля для потенциометра
 
 // настройки радуги
@@ -132,7 +135,7 @@ float MAX_COEF_FREQ = 1.2;        // коэффициент порога для 
 #define HIGH_COLOR HUE_YELLOW     // цвет высоких
 
 // режим стробоскопа
-int STROBE_PERIOD = 100;          // период вспышек, миллисекунды
+uint16_t STROBE_PERIOD = 100;     // период вспышек, миллисекунды
 #define STROBE_DUTY 20            // скважность вспышек (1 - 99) - отношение времени вспышки ко времени темноты
 #define STROBE_COLOR HUE_YELLOW   // цвет стробоскопа
 #define STROBE_SAT 0              // насыщенность. Если 0 - цвет будет БЕЛЫЙ при любом цвете (0 - 255)
@@ -256,10 +259,11 @@ boolean running_flag[3], eeprom_flag;
 void setup() {
   Serial.begin(9600);
   FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.setBrightness(BRIGHTNESS);
 
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
+  pinMode(MLED_PIN, OUTPUT);        //Режим пина для светодиода режима на выход
+  digitalWrite(MLED_PIN, !MLED_ON); //Выключение светодиода режима
 
   pinMode(POT_GND, OUTPUT);
   digitalWrite(POT_GND, LOW);
@@ -699,7 +703,7 @@ void processCommand() {
         break;
       case POWER: ONstate = !ONstate; FastLED.clear(); FastLED.show(); updateEEPROM();
         break;
-      case COMMON_BRIGHTNESS_SETTINGS: settings_mode = !settings_mode; digitalWrite(13, settings_mode);
+      case COMMON_BRIGHTNESS_SETTINGS: digitalWrite(MLED_PIN, settings_mode ^ MLED_ON); settings_mode = !settings_mode;
         break;
       case SETTINGS_B_INC:
         if (settings_mode) {
@@ -890,7 +894,7 @@ void analyzeAudio() {
 }
 
 void fullLowPass() {
-  digitalWrite(13, HIGH);   // включить светодиод 13 пин
+  digitalWrite(MLED_PIN, MLED_ON);   // включить светодиод
   FastLED.setBrightness(0); // погасить ленту
   FastLED.clear();          // очистить массив пикселей
   FastLED.show();           // отправить значения на ленту
@@ -898,7 +902,7 @@ void fullLowPass() {
   autoLowPass();            // измерить шумы
   delay(500);               // подождать
   FastLED.setBrightness(BRIGHTNESS);  // вернуть яркость
-  digitalWrite(13, LOW);    // выключить светодиод
+  digitalWrite(MLED_PIN, !MLED_ON);    // выключить светодиод
 }
 void updateEEPROM() {
   EEPROM.updateByte(1, this_mode);
