@@ -102,7 +102,6 @@ float RAINBOW_STEP = 5.5;   // шаг изменения цвета радуги
 
 // отрисовка
 #define MODE 0              // режим при запуске
-#define START_UP_EFFECT 0   // start up mode
 #define MAIN_LOOP 5         // период основного цикла отрисовки (по умолчанию 5)
 
 // сигнал
@@ -237,6 +236,7 @@ boolean colorMusicFlash[3], strobeUp_flag, strobeDwn_flag;
 byte this_mode = MODE;
 int thisBright[3], strobe_bright = 0;
 unsigned int light_time = STROBE_PERIOD * STROBE_DUTY / 100;
+int8_t start_up_effect;
 volatile boolean bt_flag;
 boolean settings_mode, ONstate = true;
 int freq_max;
@@ -887,6 +887,7 @@ void fullLowPass() {
 }
 void updateEEPROM() {
   EEPROM.updateByte(1, this_mode);
+  EEPROM.updateByte(2, start_up_effect);
   EEPROM.updateInt(4, RAINBOW_STEP);
   EEPROM.updateFloat(8, MAX_COEF_FREQ);
   EEPROM.updateInt(12, STROBE_PERIOD);
@@ -906,6 +907,7 @@ void updateEEPROM() {
 }
 void readEEPROM() {
   this_mode = EEPROM.readByte(1);
+  start_up_effect = EEPROM.readByte(2);
   RAINBOW_STEP = EEPROM.readInt(4);
   MAX_COEF_FREQ = EEPROM.readFloat(8);
   STROBE_PERIOD = EEPROM.readInt(12);
@@ -933,7 +935,7 @@ void eepromTick() {
 }
 
 void showStartUpEffect() {
-  switch (START_UP_EFFECT) {
+  switch (start_up_effect) {
     case 0:
       meteorRain();
       break;
