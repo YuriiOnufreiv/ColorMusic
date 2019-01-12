@@ -165,6 +165,10 @@ byte HUE_STEP = 5;
   HUE_PINK
 */
 // --------------------------- НАСТРОЙКИ ---------------------------
+const char METEOR_RAIN_START_UP_EFFECT = '0';
+const char COLOR_WIPE_START_UP_EFFECT = '1';
+const char CYLON_BOUNCE_START_UP_EFFECT = '2';
+
 const char VU_METER_MODE = 'a';
 const char RAINBOW_MODE = 'b';
 const char STRIPS_FIVE_MODE = 'c';
@@ -236,6 +240,7 @@ boolean colorMusicFlash[3], strobeUp_flag, strobeDwn_flag;
 byte this_mode = MODE;
 int thisBright[3], strobe_bright = 0;
 unsigned int light_time = STROBE_PERIOD * STROBE_DUTY / 100;
+int8_t start_up_effect = 0;
 volatile boolean bt_flag;
 boolean settings_mode, ONstate = true;
 int freq_max;
@@ -292,6 +297,8 @@ void setup() {
       readEEPROM();
     }
   }
+
+  showStartUpEffect();
 }
 
 void loop() {
@@ -646,6 +653,13 @@ void processCommand() {
     eeprom_timer = millis();
     eeprom_flag = true;
     switch (command) {
+      // start up effects
+      case METEOR_RAIN_START_UP_EFFECT: start_up_effect = 0; showStartUpEffect();
+        break;
+      case COLOR_WIPE_START_UP_EFFECT: start_up_effect = 1; showStartUpEffect();
+        break;
+      case CYLON_BOUNCE_START_UP_EFFECT: start_up_effect = 2; showStartUpEffect();
+        break;      
       // режимы
       case VU_METER_MODE: this_mode = 0;
         break;
@@ -888,6 +902,7 @@ void fullLowPass() {
 }
 void updateEEPROM() {
   EEPROM.updateByte(1, this_mode);
+  EEPROM.updateByte(2, start_up_effect);
   EEPROM.updateInt(4, RAINBOW_STEP);
   EEPROM.updateFloat(8, MAX_COEF_FREQ);
   EEPROM.updateInt(12, STROBE_PERIOD);
@@ -907,6 +922,7 @@ void updateEEPROM() {
 }
 void readEEPROM() {
   this_mode = EEPROM.readByte(1);
+  start_up_effect = EEPROM.readByte(2);
   RAINBOW_STEP = EEPROM.readInt(4);
   MAX_COEF_FREQ = EEPROM.readFloat(8);
   STROBE_PERIOD = EEPROM.readInt(12);
@@ -931,4 +947,110 @@ void eepromTick() {
       eeprom_timer = millis();
       updateEEPROM();
     }
+}
+
+void showStartUpEffect() {
+  switch (start_up_effect) {
+    case 0:
+      meteorRain();
+      break;
+    case 1:
+      colorWipe();
+      break;
+    case 2:
+      cylonBounce();
+      break;
+  }
+}
+
+void setAll(byte red, byte green, byte blue) {
+  for (int i = 0; i < NUM_LEDS; i++ ) {
+    setPixel(i, red, green, blue);
+  }
+  showStrip();
+}
+
+void showStrip() {
+  FastLED.show();
+}
+
+void setPixel(int Pixel, byte red, byte green, byte blue) {
+  leds[Pixel].r = red;
+  leds[Pixel].g = green;
+  leds[Pixel].b = blue;
+}
+
+void meteorRain() {
+  meteorRain(0xff, 0x00, 0x00, 10, 64, true, 5);
+}
+
+void meteorRain(byte red, byte green, byte blue, byte meteorSize,
+                byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) {
+  setAll(0, 0, 0);
+  for (int i = 0; i < NUM_LEDS + NUM_LEDS; i++) {
+    // fade brightness all LEDs one step
+    for (int j = 0; j < NUM_LEDS; j++) {
+      if ( (!meteorRandomDecay) || (random(10) > 5) ) {
+        fadeToBlack(j, meteorTrailDecay );
+      }
+    }
+    // draw meteor
+    for (int j = 0; j < meteorSize; j++) {
+      if ( ( i - j < NUM_LEDS) && (i - j >= 0) ) {
+        setPixel(i - j, red, green, blue);
+      }
+    }
+    showStrip();
+    delay(SpeedDelay);
+  }
+}
+
+void fadeToBlack(int ledNo, byte fadeValue) {
+  leds[ledNo].fadeToBlackBy(fadeValue);
+}
+
+void colorWipe() {
+  colorWipe(0x00, 0xff, 0x00, 10);
+  colorWipe(0x00, 0x00, 0x00, 10);
+}
+
+void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
+  for (uint16_t i = 0; i < NUM_LEDS; i++) {
+    setPixel(i, red, green, blue);
+    showStrip();
+    delay(SpeedDelay);
+  }
+}
+
+void cylonBounce() {
+  cylonBounce(0xff, 0, 0, 4, 2, 50);
+}
+
+void cylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, int ReturnDelay) {
+
+  for (int i = 0; i < NUM_LEDS - EyeSize - 2; i++) {
+    setAll(0, 0, 0);
+    setPixel(i, red / 10, green / 10, blue / 10);
+    for (int j = 1; j <= EyeSize; j++) {
+      setPixel(i + j, red, green, blue);
+    }
+    setPixel(i + EyeSize + 1, red / 10, green / 10, blue / 10);
+    showStrip();
+    delay(SpeedDelay);
+  }
+
+  delay(ReturnDelay);
+
+  for (int i = NUM_LEDS - EyeSize - 2; i > 0; i--) {
+    setAll(0, 0, 0);
+    setPixel(i, red / 10, green / 10, blue / 10);
+    for (int j = 1; j <= EyeSize; j++) {
+      setPixel(i + j, red, green, blue);
+    }
+    setPixel(i + EyeSize + 1, red / 10, green / 10, blue / 10);
+    showStrip();
+    delay(SpeedDelay);
+  }
+
+  delay(ReturnDelay);
 }
