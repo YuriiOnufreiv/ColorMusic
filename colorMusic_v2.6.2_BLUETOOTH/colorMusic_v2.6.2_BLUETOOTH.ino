@@ -165,6 +165,10 @@ byte HUE_STEP = 5;
   HUE_PINK
 */
 // --------------------------- НАСТРОЙКИ ---------------------------
+const char METEOR_RAIN_START_UP_EFFECT = '0';
+const char COLOR_WIPE_START_UP_EFFECT = '1';
+const char CYLON_BOUNCE_START_UP_EFFECT = '2';
+
 const char VU_METER_MODE = 'a';
 const char RAINBOW_MODE = 'b';
 const char STRIPS_FIVE_MODE = 'c';
@@ -236,7 +240,7 @@ boolean colorMusicFlash[3], strobeUp_flag, strobeDwn_flag;
 byte this_mode = MODE;
 int thisBright[3], strobe_bright = 0;
 unsigned int light_time = STROBE_PERIOD * STROBE_DUTY / 100;
-int8_t start_up_effect;
+int8_t start_up_effect = 0;
 volatile boolean bt_flag;
 boolean settings_mode, ONstate = true;
 int freq_max;
@@ -645,6 +649,13 @@ void processCommand() {
     eeprom_timer = millis();
     eeprom_flag = true;
     switch (command) {
+      // start up effects
+      case METEOR_RAIN_START_UP_EFFECT: start_up_effect = 0; showStartUpEffect();
+        break;
+      case COLOR_WIPE_START_UP_EFFECT: start_up_effect = 1; showStartUpEffect();
+        break;
+      case CYLON_BOUNCE_START_UP_EFFECT: start_up_effect = 2; showStartUpEffect();
+        break;      
       // режимы
       case VU_METER_MODE: this_mode = 0;
         break;
