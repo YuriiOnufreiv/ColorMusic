@@ -89,6 +89,7 @@
 // лента
 #define NUM_LEDS 120        // количество светодиодов
 byte BRIGHTNESS = 200;      // яркость (0 - 255)
+#define CURRENT_LIMIT 3000  // лимит по току в МИЛЛИАМПЕРАХ, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 // пины
 #define SOUND_R A2         // аналоговый пин вход аудио, правый канал
@@ -258,6 +259,7 @@ boolean running_flag[3], eeprom_flag;
 void setup() {
   Serial.begin(9600);
   FastLED.addLeds<WS2811, LED_PIN, GRB>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.setBrightness(BRIGHTNESS);
 
   pinMode(MLED_PIN, OUTPUT);        //Режим пина для светодиода режима на выход
