@@ -977,7 +977,7 @@ void setPixel(int Pixel, byte red, byte green, byte blue) {
 }
 
 void meteorRain() {
-  meteorRain(0xff, 0xff, 0xff, 10, 64, true, 30);
+  meteorRain(0xff, 0x00, 0x00, 10, 64, true, 5);
 }
 
 void meteorRain(byte red, byte green, byte blue, byte meteorSize,
@@ -1006,8 +1006,8 @@ void fadeToBlack(int ledNo, byte fadeValue) {
 }
 
 void colorWipe() {
-  colorWipe(0x00, 0xff, 0x00, 50);
-  colorWipe(0x00, 0x00, 0x00, 50);
+  colorWipe(0x00, 0xff, 0x00, 10);
+  colorWipe(0x00, 0x00, 0x00, 10);
 }
 
 void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
@@ -1019,7 +1019,7 @@ void colorWipe(byte red, byte green, byte blue, int SpeedDelay) {
 }
 
 void cylonBounce() {
-  cylonBounce(0xff, 0, 0, 4, 10, 50);
+  cylonBounce(0xff, 0, 0, 4, 2, 50);
 }
 
 void cylonBounce(byte red, byte green, byte blue, int EyeSize, int SpeedDelay, int ReturnDelay) {
